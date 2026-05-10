@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Chore Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300..700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* === TOKENS === */
+:root, [data-theme="light"] {
+  --color-bg: #f7f6f2;
+  --color-surface: #f9f8f5;
+  --color-surface-2: #fbfbf9;
+  --color-surface-offset: #f0ede8;
+  --color-border: #d4d1ca;
+  --color-divider: #dcd9d5;
+  --color-text: #28251d;
+  --color-text-muted: #7a7974;
+  --color-text-faint: #bab9b4;
+  --color-primary: #01696f;
+  --color-primary-hover: #0c4e54;
+  --color-primary-highlight: #cedcd8;
+  --color-success: #437a22;
+  --color-success-hover: #2e5c10;
+  --color-success-highlight: #d4dfcc;
+  --color-warning: #964219;
+  --color-warning-highlight: #ddcfc6;
+  --color-error: #a12c7b;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px oklch(0.2 0.01 80 / 0.06);
+  --shadow-md: 0 4px 12px oklch(0.2 0.01 80 / 0.08);
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
+  --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+  --space-12: 3rem; --space-16: 4rem;
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+  --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+  --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme="dark"] {
+  --color-bg: #171614;
+  --color-surface: #1c1b19;
+  --color-surface-2: #201f1d;
+  --color-surface-offset: #22211f;
+  --color-border: #393836;
+  --color-divider: #262523;
+  --color-text: #cdccca;
+  --color-text-muted: #797876;
+  --color-text-faint: #5a5957;
+  --color-primary: #4f98a3;
+  --color-primary-hover: #227f8b;
+  --color-primary-highlight: #313b3b;
+  --color-success: #6daa45;
+  --color-success-hover: #4d8f25;
+  --color-success-highlight: #3a4435;
+  --color-warning: #bb653b;
+  --color-warning-highlight: #564942;
+  --color-error: #d163a7;
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.2);
+  --shadow-md: 0 4px 12px oklch(0 0 0 / 0.3);
+}
+
+/* === BASE === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; scroll-behavior: smooth; }
+body { min-height: 100dvh; font-family: var(--font-body); font-size: var(--text-base); color: var(--color-text); background: var(--color-bg); transition: background var(--transition), color var(--transition); }
+img, svg { display: block; max-width: 100%; }
+button { cursor: pointer; background: none; border: none; font: inherit; color: inherit; }
+input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-sm); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
+
+/* === LAYOUT === */
+.app-wrapper { max-width: 680px; margin-inline: auto; padding: var(--space-8) var(--space-4); }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-8); }
+.logo-group { display: flex; align-items: center; gap: var(--space-3); }
+.logo-group h1 { font-size: var(--text-lg); font-weight: 600; letter-spacing: -0.02em; }
+.theme-toggle { width: 36px; height: 36px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); transition: background var(--transition), color var(--transition); }
+.theme-toggle:hover { background: var(--color-surface-offset); color: var(--color-text); }
+
+/* === TODAY CARD === */
+.today-card { background: var(--color-surface); border: 1px solid oklch(from var(--color-text) l c h / 0.08); border-radius: var(--radius-xl); padding: var(--space-6); margin-bottom: var(--space-6); box-shadow: var(--shadow-md); }
+.today-label { font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-faint); margin-bottom: var(--space-2); }
+.today-task-row { display: flex; align-items: center; gap: var(--space-4); }
+.today-task-name { font-size: var(--text-lg); font-weight: 600; flex: 1; color: var(--color-text); }
+.today-task-name.done { text-decoration: line-through; color: var(--color-text-muted); }
+.duration-badge { font-size: var(--text-xs); font-family: var(--font-mono); background: var(--color-surface-offset); color: var(--color-text-muted); padding: var(--space-1) var(--space-2); border-radius: var(--radius-full); white-space: nowrap; flex-shrink: 0; }
+.done-btn { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); font-weight: 500; padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); background: var(--color-primary); color: white; transition: background var(--transition), transform var(--transition); flex-shrink: 0; }
+.done-btn:hover { background: var(--color-primary-hover); }
+.done-btn:active { transform: scale(0.97); }
+.done-btn.completed { background: var(--color-success); cursor: default; }
+.done-btn.completed:hover { background: var(--color-success-hover); }
+.skip-btn { font-size: var(--text-xs); color: var(--color-text-faint); margin-top: var(--space-3); text-decoration: underline; text-underline-offset: 3px; background: none; border: none; cursor: pointer; transition: color var(--transition); }
+.skip-btn:hover { color: var(--color-text-muted); }
+
+/* === STREAK === */
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-6); }
+.stat-card { background: var(--color-surface); border: 1px solid oklch(from var(--color-text) l c h / 0.07); border-radius: var(--radius-lg); padding: var(--space-4); text-align: center; box-shadow: var(--shadow-sm); }
+.stat-value { font-size: var(--text-xl); font-weight: 700; font-family: var(--font-mono); color: var(--color-primary); line-height: 1.1; }
+.stat-label { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: var(--space-1); }
+
+/* === WEEK VIEW === */
+.week-strip { display: flex; gap: var(--space-2); margin-bottom: var(--space-6); justify-content: center; }
+.day-dot { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); }
+.day-dot-label { font-size: var(--text-xs); color: var(--color-text-faint); }
+.day-dot-circle { width: 28px; height: 28px; border-radius: var(--radius-full); background: var(--color-surface-offset); display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.day-dot-circle.done { background: var(--color-success-highlight); color: var(--color-success); }
+.day-dot-circle.today { border: 2px solid var(--color-primary); }
+.day-dot-circle.skipped { background: var(--color-warning-highlight); color: var(--color-warning); }
+
+/* === TASK LIST === */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+.section-title { font-size: var(--text-sm); font-weight: 600; color: var(--color-text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+.add-task-btn { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-sm); font-weight: 500; color: var(--color-primary); transition: color var(--transition); }
+.add-task-btn:hover { color: var(--color-primary-hover); }
+.task-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.task-item { background: var(--color-surface); border: 1px solid oklch(from var(--color-text) l c h / 0.07); border-radius: var(--radius-lg); padding: var(--space-3) var(--space-4); display: flex; align-items: center; gap: var(--space-3); transition: box-shadow var(--transition), background var(--transition); box-shadow: var(--shadow-sm); }
+.task-item:hover { box-shadow: var(--shadow-md); }
+.task-item.next-up { border-color: oklch(from var(--color-primary) l c h / 0.3); }
+.task-info { flex: 1; }
+.task-name { font-size: var(--text-sm); font-weight: 500; }
+.task-duration { font-size: var(--text-xs); font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 2px; }
+.task-actions { display: flex; gap: var(--space-1); }
+.icon-btn { width: 30px; height: 30px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--color-text-faint); transition: background var(--transition), color var(--transition); }
+.icon-btn:hover { background: var(--color-surface-offset); color: var(--color-text); }
+.icon-btn.delete:hover { background: #fee2e2; color: #dc2626; }
+[data-theme="dark"] .icon-btn.delete:hover { background: #3d1515; color: #f87171; }
+.next-badge { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-primary); background: var(--color-primary-highlight); padding: 2px var(--space-2); border-radius: var(--radius-full); }
+
+/* === ADD TASK FORM === */
+.add-form { background: var(--color-surface-2); border: 1.5px dashed var(--color-border); border-radius: var(--radius-lg); padding: var(--space-4); margin-top: var(--space-2); display: none; }
+.add-form.open { display: block; }
+.form-row { display: flex; gap: var(--space-3); align-items: flex-end; flex-wrap: wrap; }
+.form-group { display: flex; flex-direction: column; gap: var(--space-1); flex: 1; min-width: 160px; }
+.form-group label { font-size: var(--text-xs); font-weight: 600; color: var(--color-text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+.form-input { font-size: var(--text-sm); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); transition: border-color var(--transition), box-shadow var(--transition); }
+.form-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px oklch(from var(--color-primary) l c h / 0.15); }
+.form-actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); justify-content: flex-end; }
+.btn-primary { font-size: var(--text-sm); font-weight: 500; padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); background: var(--color-primary); color: white; transition: background var(--transition); }
+.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-ghost { font-size: var(--text-sm); padding: var(--space-2) var(--space-3); border-radius: var(--radius-full); color: var(--color-text-muted); transition: background var(--transition), color var(--transition); }
+.btn-ghost:hover { background: var(--color-surface-offset); color: var(--color-text); }
+
+/* === HISTORY === */
+.history-section { margin-top: var(--space-8); }
+.history-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--color-divider); }
+.history-item:last-child { border-bottom: none; }
+.history-date { font-size: var(--text-xs); font-family: var(--font-mono); color: var(--color-text-faint); min-width: 60px; }
+.history-name { font-size: var(--text-sm); flex: 1; }
+.history-status { font-size: var(--text-xs); font-weight: 600; padding: 2px var(--space-2); border-radius: var(--radius-full); }
+.history-status.done { background: var(--color-success-highlight); color: var(--color-success); }
+.history-status.skipped { background: var(--color-warning-highlight); color: var(--color-warning); }
+
+/* === EMPTY STATE === */
+.empty-state { text-align: center; padding: var(--space-10) var(--space-8); color: var(--color-text-muted); }
+.empty-state svg { margin: 0 auto var(--space-4); color: var(--color-text-faint); }
+.empty-state p { font-size: var(--text-sm); max-width: 28ch; margin: 0 auto; }
+
+/* === NO TASK STATE === */
+.no-task-card { background: var(--color-surface); border: 1px dashed var(--color-border); border-radius: var(--radius-xl); padding: var(--space-8); text-align: center; }
+.no-task-card p { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+@media (max-width: 520px) {
+  .stats-row { grid-template-columns: repeat(3, 1fr); }
+  .today-task-row { flex-wrap: wrap; }
+  .stat-value { font-size: var(--text-lg); }
+}
+
+/* === PASSWORD GATE === */
+.pw-gate { position: fixed; inset: 0; background: var(--color-bg); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: var(--space-4); }
+.pw-box { background: var(--color-surface); border: 1px solid oklch(from var(--color-text) l c h / 0.08); border-radius: var(--radius-xl); padding: var(--space-8); width: 100%; max-width: 340px; box-shadow: var(--shadow-md); text-align: center; }
+.pw-box h2 { font-size: var(--text-lg); font-weight: 600; margin-bottom: var(--space-2); }
+.pw-box p { font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-6); }
+.pw-input-row { display: flex; gap: var(--space-2); }
+.pw-input { flex: 1; font-size: var(--text-sm); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-2); color: var(--color-text); transition: border-color var(--transition), box-shadow var(--transition); }
+.pw-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px oklch(from var(--color-primary) l c h / 0.15); }
+.pw-submit { font-size: var(--text-sm); font-weight: 500; padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); background: var(--color-primary); color: white; transition: background var(--transition); flex-shrink: 0; }
+.pw-submit:hover { background: var(--color-primary-hover); }
+.pw-error { font-size: var(--text-xs); color: var(--color-error); margin-top: var(--space-2); min-height: 1.2em; }
+.pw-change { font-size: var(--text-xs); color: var(--color-text-faint); margin-top: var(--space-8); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; transition: color var(--transition); }
+.pw-change:hover { color: var(--color-text-muted); }
+</style>
+</head>
+<body>
+<div class="app-wrapper">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo-group">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-label="Chore Tracker logo">
+        <rect width="28" height="28" rx="8" fill="currentColor" opacity="0.1"/>
+        <path d="M8 14 L12 18 L20 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="14" cy="14" r="11" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      <h1>Daily Chore</h1>
+    </div>
+    <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <!-- WEEK STRIP -->
+  <div class="week-strip" id="weekStrip"></div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value" id="streakCount">0</div>
+      <div class="stat-label">🔥 streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="totalDone">0</div>
+      <div class="stat-label">✅ done</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="totalTasks">0</div>
+      <div class="stat-label">📋 tasks</div>
+    </div>
+  </div>
+
+  <!-- TODAY CARD -->
+  <div id="todaySection"></div>
+
+  <!-- TASK LIST -->
+  <div class="section-header" style="margin-top: var(--space-8);">
+    <span class="section-title">All Chores</span>
+    <button class="add-task-btn" id="toggleAddForm">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Add chore
+    </button>
+  </div>
+
+  <div class="add-form" id="addForm">
+    <div class="form-row">
+      <div class="form-group" style="flex:2">
+        <label for="taskNameInput">Chore name</label>
+        <input class="form-input" type="text" id="taskNameInput" placeholder="e.g. Wipe down kitchen counter" maxlength="60">
+      </div>
+      <div class="form-group" style="flex:1; min-width:100px">
+        <label for="taskDurInput">Duration</label>
+        <input class="form-input" type="text" id="taskDurInput" placeholder="e.g. 5 min" maxlength="12">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-ghost" id="cancelAddForm">Cancel</button>
+      <button class="btn-primary" id="submitAddForm">Add chore</button>
+    </div>
+  </div>
+
+  <div class="task-list" id="taskList"></div>
+
+  <!-- HISTORY -->
+  <div class="history-section">
+    <div class="section-header">
+      <span class="section-title">History</span>
+    </div>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<script>
+// ====== STATE ======
+const DEFAULT_TASKS = [
+  { id: 1, name: "Vacuum one room", dur: "5–8 min" },
+  { id: 2, name: "Wipe down kitchen counter & stovetop", dur: "5 min" },
+  { id: 3, name: "Clean bathroom sink & mirror", dur: "5 min" },
+  { id: 4, name: "Take out trash", dur: "3 min" },
+  { id: 5, name: "Wipe down toilet", dur: "4 min" },
+  { id: 6, name: "Sweep/mop entryway", dur: "5 min" },
+  { id: 7, name: "Dust shelves or surfaces", dur: "7 min" },
+  { id: 8, name: "Clean microwave inside", dur: "5 min" },
+  { id: 9, name: "Scrub bathtub or shower tiles", dur: "10 min" },
+  { id: 10, name: "Wipe down fridge exterior & handles", dur: "3 min" },
+  { id: 11, name: "Wash up dishes / run dishwasher", dur: "8 min" },
+  { id: 12, name: "Mop kitchen floor", dur: "8 min" },
+  { id: 13, name: "Change bed sheets", dur: "10 min" },
+  { id: 14, name: "Declutter one drawer or shelf", dur: "10 min" },
+  { id: 15, name: "Clean windows / glass doors", dur: "8 min" },
+  { id: 16, name: "Wipe light switches & door handles", dur: "4 min" },
+  { id: 17, name: "Clean toilet bowl", dur: "5 min" },
+  { id: 18, name: "Organise under the sink", dur: "10 min" },
+];
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem("dailyChoreState");
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return null;
+}
+
+function saveState() {
+  try { localStorage.setItem("dailyChoreState", JSON.stringify(state)); } catch(e) {}
+}
+
+const _saved = loadState();
+let state = _saved || {
+  tasks: [...DEFAULT_TASKS],
+  history: [],
+  nextId: DEFAULT_TASKS.length + 1,
+};
+if (state.tasks.length > 0) {
+  state.nextId = Math.max(state.nextId, ...state.tasks.map(t => t.id)) + 1;
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getTodayEntry() {
+  return state.history.find(h => h.date === todayStr());
+}
+
+// Determine today's task: pick the one least recently used that hasn't been done today
+function getTodayTask() {
+  const todayEntry = getTodayEntry();
+  if (todayEntry) {
+    return state.tasks.find(t => t.id === todayEntry.taskId) || null;
+  }
+  // Find which tasks were most recently done (to avoid repeating)
+  const recentIds = state.history
+    .filter(h => h.status === "done")
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .map(h => h.taskId);
+
+  // Pick task that hasn't been done recently
+  const available = state.tasks.filter(t => !recentIds.slice(0, Math.min(state.tasks.length - 1, recentIds.length)).includes(t.id));
+  if (available.length === 0) return state.tasks[Math.floor(Math.random() * state.tasks.length)];
+  // Deterministic: pick based on today's date hash
+  const dayHash = new Date().getDate() + new Date().getMonth() * 31;
+  return available[dayHash % available.length];
+}
+
+function getStreak() {
+  let streak = 0;
+  let d = new Date();
+  d.setHours(0,0,0,0);
+  while (true) {
+    const ds = d.toISOString().slice(0, 10);
+    const entry = state.history.find(h => h.date === ds && h.status === "done");
+    if (!entry) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+function getTotalDone() {
+  return state.history.filter(h => h.status === "done").length;
+}
+
+// ====== RENDER ======
+function render() {
+  renderWeekStrip();
+  renderStats();
+  renderToday();
+  renderTaskList();
+  renderHistory();
+}
+
+function renderWeekStrip() {
+  const strip = document.getElementById("weekStrip");
+  strip.innerHTML = "";
+  const days = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const ds = d.toISOString().slice(0, 10);
+    const entry = state.history.find(h => h.date === ds);
+    const isToday = i === 0;
+    let circleClass = "day-dot-circle";
+    let symbol = "";
+    if (entry?.status === "done") { circleClass += " done"; symbol = "✓"; }
+    else if (entry?.status === "skipped") { circleClass += " skipped"; symbol = "–"; }
+    if (isToday) circleClass += " today";
+    strip.innerHTML += `<div class="day-dot"><div class="${circleClass}">${symbol}</div><span class="day-dot-label">${days[d.getDay()]}</span></div>`;
+  }
+}
+
+function renderStats() {
+  document.getElementById("streakCount").textContent = getStreak();
+  document.getElementById("totalDone").textContent = getTotalDone();
+  document.getElementById("totalTasks").textContent = state.tasks.length;
+}
+
+function renderToday() {
+  const sec = document.getElementById("todaySection");
+  const task = getTodayTask();
+  const todayEntry = getTodayEntry();
+  const isDone = todayEntry?.status === "done";
+  const isSkipped = todayEntry?.status === "skipped";
+
+  if (!task) {
+    sec.innerHTML = `<div class="no-task-card"><p>Add some chores below to get started!</p></div>`;
+    return;
+  }
+
+  sec.innerHTML = `
+  <div class="today-card">
+    <div class="today-label">Today's chore</div>
+    <div class="today-task-row">
+      <span class="today-task-name${isDone ? " done" : ""}">${task.name}</span>
+      <span class="duration-badge">${task.dur}</span>
+      <button class="done-btn${isDone ? " completed" : ""}" id="doneBtn">
+        ${isDone ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Done!` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Mark done`}
+      </button>
+    </div>
+    ${(!isDone && !isSkipped) ? `<button class="skip-btn" id="skipBtn">Skip today</button>` : ""}
+    ${isSkipped ? `<p style="font-size:var(--text-xs); color:var(--color-text-faint); margin-top:var(--space-3);">Skipped today — see you tomorrow!</p>` : ""}
+  </div>`;
+
+  document.getElementById("doneBtn")?.addEventListener("click", () => {
+    if (isDone) return;
+    markToday(task, "done");
+  });
+  document.getElementById("skipBtn")?.addEventListener("click", () => {
+    markToday(task, "skipped");
+  });
+}
+
+function markToday(task, status) {
+  const existing = getTodayEntry();
+  if (existing) { existing.status = status; }
+  else { state.history.push({ date: todayStr(), taskId: task.id, taskName: task.name, status }); }
+  saveState();
+  render();
+  animateStat();
+}
+
+function animateStat() {
+  const el = document.getElementById("streakCount");
+  el.style.transform = "scale(1.3)";
+  el.style.color = "var(--color-success)";
+  setTimeout(() => { el.style.transform = ""; el.style.color = ""; }, 400);
+}
+
+function renderTaskList() {
+  const list = document.getElementById("taskList");
+  if (state.tasks.length === 0) {
+    list.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M8 8h5M8 16h3"/></svg><p>No chores yet. Add your first one above!</p></div>`;
+    return;
+  }
+  const nextTask = getTodayTask();
+  list.innerHTML = state.tasks.map(t => {
+    const isNext = nextTask && t.id === nextTask.id && !getTodayEntry();
+    return `
+    <div class="task-item${isNext ? " next-up" : ""}">
+      <div class="task-info">
+        <div class="task-name">${t.name}</div>
+        <div class="task-duration">⏱ ${t.dur}</div>
+      </div>
+      ${isNext ? `<span class="next-badge">Today</span>` : ""}
+      <div class="task-actions">
+        <button class="icon-btn delete" data-del="${t.id}" aria-label="Delete chore">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join("");
+
+  list.querySelectorAll("[data-del]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = parseInt(btn.dataset.del);
+      state.tasks = state.tasks.filter(t => t.id !== id);
+      saveState();
+      render();
+    });
+  });
+}
+
+function renderHistory() {
+  const el = document.getElementById("historyList");
+  const recent = [...state.history].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 14);
+  if (recent.length === 0) {
+    el.innerHTML = `<p style="font-size:var(--text-sm); color:var(--color-text-faint); padding: var(--space-4) 0;">No history yet — complete today's chore to get started!</p>`;
+    return;
+  }
+  el.innerHTML = recent.map(h => `
+    <div class="history-item">
+      <span class="history-date">${h.date.slice(5)}</span>
+      <span class="history-name">${h.taskName}</span>
+      <span class="history-status ${h.status}">${h.status === "done" ? "Done" : "Skipped"}</span>
+    </div>`).join("");
+}
+
+// ====== ADD FORM ======
+document.getElementById("toggleAddForm").addEventListener("click", () => {
+  document.getElementById("addForm").classList.toggle("open");
+});
+document.getElementById("cancelAddForm").addEventListener("click", () => {
+  document.getElementById("addForm").classList.remove("open");
+  document.getElementById("taskNameInput").value = "";
+  document.getElementById("taskDurInput").value = "";
+});
+document.getElementById("submitAddForm").addEventListener("click", () => {
+  const name = document.getElementById("taskNameInput").value.trim();
+  const dur = document.getElementById("taskDurInput").value.trim() || "≤10 min";
+  if (!name) { document.getElementById("taskNameInput").focus(); return; }
+  state.tasks.push({ id: state.nextId++, name, dur });
+  saveState();
+  document.getElementById("taskNameInput").value = "";
+  document.getElementById("taskDurInput").value = "";
+  document.getElementById("addForm").classList.remove("open");
+  render();
+});
+document.getElementById("taskNameInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("submitAddForm").click();
+});
+
+// ====== THEME TOGGLE ======
+(function(){
+  const t = document.querySelector("[data-theme-toggle]");
+  const r = document.documentElement;
+  let d = matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light";
+  r.setAttribute("data-theme", d);
+  const moon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+  const sun = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
+  t.innerHTML = d === "dark" ? sun : moon;
+  t.addEventListener("click", () => {
+    d = d === "dark" ? "light" : "dark";
+    r.setAttribute("data-theme", d);
+    t.innerHTML = d === "dark" ? sun : moon;
+  });
+})();
+
+
+// ====== PASSWORD GATE ======
+const PW_KEY = "dailyChoreAuth";
+const PW_HASH_KEY = "dailyChoreHash";
+const DEFAULT_PW = "chores";
+
+async function hashPw(pw) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+async function getStoredHash() {
+  return localStorage.getItem(PW_HASH_KEY) || await hashPw(DEFAULT_PW);
+}
+
+async function checkAuth() {
+  const authed = sessionStorage.getItem(PW_KEY);
+  if (authed === "1") return true;
+  return false;
+}
+
+function showGate(onSuccess) {
+  const gate = document.createElement("div");
+  gate.className = "pw-gate";
+  gate.innerHTML = `
+    <div class="pw-box">
+      <svg width="36" height="36" viewBox="0 0 28 28" fill="none" style="margin:0 auto var(--space-4)" aria-hidden="true">
+        <rect width="28" height="28" rx="8" fill="currentColor" opacity="0.1"/>
+        <path d="M8 14 L12 18 L20 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="14" cy="14" r="11" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      <h2>Daily Chore</h2>
+      <p>Enter your password to continue.</p>
+      <div class="pw-input-row">
+        <input class="pw-input" type="password" id="pwInput" placeholder="Password" autocomplete="current-password">
+        <button class="pw-submit" id="pwSubmit">→</button>
+      </div>
+      <div class="pw-error" id="pwError"></div>
+      <div class="pw-change" id="pwChange">Change password</div>
+    </div>`;
+  document.body.appendChild(gate);
+
+  const input = gate.querySelector("#pwInput");
+  const submit = gate.querySelector("#pwSubmit");
+  const errEl = gate.querySelector("#pwError");
+  const changeEl = gate.querySelector("#pwChange");
+
+  input.focus();
+
+  async function attempt() {
+    const hash = await hashPw(input.value);
+    const stored = await getStoredHash();
+    if (hash === stored) {
+      sessionStorage.setItem(PW_KEY, "1");
+      // If using default pw, save it as the hash
+      if (!localStorage.getItem(PW_HASH_KEY)) {
+        localStorage.setItem(PW_HASH_KEY, stored);
+      }
+      gate.style.opacity = "0";
+      gate.style.transition = "opacity 0.2s";
+      setTimeout(() => { gate.remove(); onSuccess(); }, 200);
+    } else {
+      errEl.textContent = "Wrong password.";
+      input.value = "";
+      input.focus();
+      input.style.borderColor = "var(--color-error)";
+      setTimeout(() => { input.style.borderColor = ""; errEl.textContent = ""; }, 1500);
+    }
+  }
+
+  submit.addEventListener("click", attempt);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") attempt(); });
+
+  changeEl.addEventListener("click", () => showChangePassword());
+}
+
+function showChangePassword() {
+  const existing = document.querySelector(".pw-gate");
+  if (existing) existing.remove();
+
+  const gate = document.createElement("div");
+  gate.className = "pw-gate";
+  gate.innerHTML = `
+    <div class="pw-box">
+      <h2>Change Password</h2>
+      <p>Enter your current password, then your new one.</p>
+      <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+        <input class="pw-input" type="password" id="pwCurrent" placeholder="Current password" style="width:100%">
+        <input class="pw-input" type="password" id="pwNew" placeholder="New password" style="width:100%">
+        <input class="pw-input" type="password" id="pwConfirm" placeholder="Confirm new password" style="width:100%">
+      </div>
+      <div class="pw-error" id="pwErr2"></div>
+      <div style="display:flex;gap:var(--space-2);margin-top:var(--space-4);justify-content:flex-end">
+        <button class="btn-ghost" id="cancelChange" style="padding:var(--space-2) var(--space-3);border-radius:var(--radius-full);font-size:var(--text-sm);color:var(--color-text-muted);transition:background var(--transition)">Cancel</button>
+        <button class="pw-submit" id="confirmChange" style="border-radius:var(--radius-full)">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(gate);
+
+  gate.querySelector("#cancelChange").addEventListener("click", () => { gate.remove(); showGate(render); });
+  gate.querySelector("#confirmChange").addEventListener("click", async () => {
+    const cur = gate.querySelector("#pwCurrent").value;
+    const nw = gate.querySelector("#pwNew").value;
+    const conf = gate.querySelector("#pwConfirm").value;
+    const errEl = gate.querySelector("#pwErr2");
+    const storedHash = await getStoredHash();
+    const curHash = await hashPw(cur);
+    if (curHash !== storedHash) { errEl.textContent = "Current password is wrong."; return; }
+    if (nw.length < 4) { errEl.textContent = "New password must be at least 4 characters."; return; }
+    if (nw !== conf) { errEl.textContent = "Passwords don't match."; return; }
+    const newHash = await hashPw(nw);
+    localStorage.setItem(PW_HASH_KEY, newHash);
+    sessionStorage.setItem(PW_KEY, "1");
+    gate.remove();
+    render();
+  });
+}
+
+// Add change-password link to the app footer
+function addPwChangeLink() {
+  if (document.getElementById("pwChangeLink")) return;
+  const footer = document.createElement("div");
+  footer.style.cssText = "text-align:center;padding:var(--space-8) 0 var(--space-4);";
+  footer.innerHTML = `<button id="pwChangeLink" style="font-size:var(--text-xs);color:var(--color-text-faint);text-decoration:underline;text-underline-offset:3px;background:none;border:none;cursor:pointer;" onclick="showChangePassword()">Change password</button>`;
+  document.querySelector(".app-wrapper").appendChild(footer);
+}
+
+// ====== INIT ======
+(async () => {
+  const authed = await checkAuth();
+  if (authed) { render(); addPwChangeLink(); }
+  else { showGate(() => { render(); addPwChangeLink(); }); }
+})();
+</script>
+</body>
+</html>
