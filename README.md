@@ -1,2 +1,2 @@
-# chore-tracker
-Web app for daily chore tracking.
+# My Life App
+Web app for managing my life.
