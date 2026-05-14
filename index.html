@@ -490,7 +490,12 @@ input{font:inherit;color:inherit}
       <div class="shopping-section" id="shoppingSection">
         <div class="section-header">
           <span class="section-title">Shopping List</span>
-          <button class="shop-clear-btn" id="clearChecked">Clear checked</button>
+          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center">
+            <button class="shop-clear-btn" id="selectAllShop">Select all</button>
+            <button class="shop-clear-btn" id="deselectAllShop">Deselect all</button>
+            <button class="shop-clear-btn" id="clearChecked">Clear checked</button>
+            <button class="shop-clear-btn" id="deleteChecked" style="color:var(--color-error)">Delete selected</button>
+          </div>
         </div>
         <div class="shop-progress"><div class="shop-progress-bar" id="shopProgressBar" style="width:0%"></div></div>
         <div class="shop-list" id="shopList"></div>
@@ -499,9 +504,7 @@ input{font:inherit;color:inherit}
           <input class="shop-add-input" type="text" id="shopAddInput" placeholder="e.g. Olive oil, 1 bottle" maxlength="80">
           <button class="shop-add-btn" id="shopAddBtn">Add</button>
         </div>
-        <div class="shop-actions-row">
-          <button class="shop-clear-btn" id="clearAllShop">Clear all manual items</button>
-        </div>
+
       </div>
     </section>
 
@@ -1141,10 +1144,30 @@ document.getElementById("clearChecked").addEventListener("click", () => {
   saveState(); renderShoppingList();
 });
 
-// Clear all manual
-document.getElementById("clearAllShop").addEventListener("click", () => {
+// Select all
+document.getElementById("selectAllShop").addEventListener("click", () => {
   if (!activeMealWeek) return;
-  getShopState(activeMealWeek).manual = [];
+  const shop = getShopState(activeMealWeek);
+  shop.auto.forEach(i=>i.checked=true);
+  shop.manual.forEach(i=>i.checked=true);
+  saveState(); renderShoppingList();
+});
+
+// Deselect all
+document.getElementById("deselectAllShop").addEventListener("click", () => {
+  if (!activeMealWeek) return;
+  const shop = getShopState(activeMealWeek);
+  shop.auto.forEach(i=>i.checked=false);
+  shop.manual.forEach(i=>i.checked=false);
+  saveState(); renderShoppingList();
+});
+
+// Delete selected (checked) items — removes from both auto and manual
+document.getElementById("deleteChecked").addEventListener("click", () => {
+  if (!activeMealWeek) return;
+  const shop = getShopState(activeMealWeek);
+  shop.auto = shop.auto.filter(i=>!i.checked);
+  shop.manual = shop.manual.filter(i=>!i.checked);
   saveState(); renderShoppingList();
 });
 
